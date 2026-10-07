@@ -5,14 +5,14 @@ import random
 from datetime import datetime
 
 # 1. ตั้งค่าหน้าจอ (ต้องอยู่บรรทัดแรก)
-st.set_page_config(page_title="ระบบแจ้งเตือนและรดน้ำอัตโนมัติ", layout="centered")
+st.set_page_config(page_title="ระบบแจ้งเตือนและรดน้ำอัตโนมัติ", layout="centered", initial_sidebar_state="expanded")
 
 # 2. เรียกใช้การสร้างฐานข้อมูล
 database.init_db()
 
-# --- ตั้งค่า Session State (ตัวแปรเก็บสถานะชั่วคราวขณะเปิดเว็บ) ---
+# --- ตั้งค่า Session State ---
 if 'moisture' not in st.session_state:
-    st.session_state.moisture = 55.0  # ค่าความชื้นเริ่มต้น
+    st.session_state.moisture = 55.0  
 if 'pump_on' not in st.session_state:
     st.session_state.pump_on = False
 if 'auto_mode' not in st.session_state:
@@ -21,34 +21,34 @@ if 'threshold' not in st.session_state:
     st.session_state.threshold = 40.0
 
 def simulate_sensor():
-    """จำลองการเปลี่ยนแปลงความชื้นเมื่อเวลาผ่านไป"""
+    """
+    จำลองการเปลี่ยนแปลงความชื้นเมื่อเวลาผ่านไป (อ้างอิง Logic การจำลอง)
+    - อัตราลดลง: เทียบเคียงจากการระเหยน้ำเฉลี่ย 3.8-5.7 มม./วัน (อ้างอิง: กรมวิชาการเกษตร/กรมส่งเสริมการเกษตร)
+    - อัตราเพิ่มขึ้น: จำลองการรดน้ำให้ความชื้นเพิ่มอย่างรวดเร็ว
+    """
     if st.session_state.pump_on:
-        # ถ้ารดน้ำ ความชื้นเพิ่ม
+        # สมมติการเปิดปั๊มน้ำ ทำให้ความชื้นเพิ่มขึ้น
         st.session_state.moisture += random.uniform(5.0, 10.0)
         if st.session_state.moisture >= 90.0:
             st.session_state.moisture = 90.0
             if st.session_state.auto_mode:
-                st.session_state.pump_on = False # ออโต้ปิดเมื่อชื้นพอ
+                st.session_state.pump_on = False
     else:
-        # ถ้าไม่รดน้ำ ความชื้นลดลง
-        st.session_state.moisture -= random.uniform(2.0, 5.0)
+        # สมมติการระเหยของน้ำในดิน (เทียบเคียงจากอัตรา 3.8 - 5.7 มม./วัน)
+        st.session_state.moisture -= random.uniform(3.8, 5.7)
         if st.session_state.moisture <= 10.0:
             st.session_state.moisture = 10.0
 
-    # Auto mode เช็กความชื้น
     if st.session_state.auto_mode and st.session_state.moisture < st.session_state.threshold:
         st.session_state.pump_on = True
 
-    # บันทึกข้อมูลลงฐานข้อมูล (SQLite)
     conn = database.get_conn()
     cursor = conn.cursor()
     current_time = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
-    # บันทึกความชื้น
     cursor.execute("INSERT INTO sensor_data (timestamp, moisture_level) VALUES (?, ?)", 
                    (current_time, st.session_state.moisture))
     
-    # บันทึกประวัติรดน้ำ (ถ้าปั๊มทำงาน)
     if st.session_state.pump_on:
         cursor.execute("INSERT INTO watering_logs (start_time, status, mode) VALUES (?, ?, ?)",
                        (current_time, "กำลังรดน้ำ", "Auto" if st.session_state.auto_mode else "Manual"))
@@ -56,10 +56,34 @@ def simulate_sensor():
     conn.commit()
     conn.close()
 
+# --- ส่วน Sidebar (เกี่ยวกับโครงการ) ---
+with st.sidebar:
+    st.header("ℹ️ เกี่ยวกับโครงการ")
+    st.markdown("**การพัฒนาระบบ/แอปแจ้งเตือนความชื้นและรดน้ำอัตโนมัติ**")
+    st.markdown("ระยะเวลาดำเนินการ: 29 มิ.ย.–21 ต.ค. 2569")
+    st.divider()
+    
+    st.markdown("**อ้างอิงข้อมูลและแนวคิดการจำลอง (Simulation):**")
+    st.markdown("- **data.go.th**: สถิติภูมิอากาศรายวัน")
+    st.markdown("- **กรมอุตุนิยมวิทยา (TMD)**: ข้อมูลอุณหภูมิและปริมาณน้ำฝน")
+    st.markdown("- **กรมวิชาการเกษตร/กรมส่งเสริมการเกษตร**: อัตราการระเหยน้ำ (Evapotranspiration) ของไม้ผลเฉลี่ย 3.8-5.7 มม./วัน (นำมาประยุกต์ใช้ในการสุ่มอัตราลดลงของความชื้น)")
+    st.divider()
 
-# --- หน้าจอ UI ---
+    st.markdown("**อาจารย์ที่ปรึกษา:**")
+    st.markdown("ผศ.ดร.ธนัท สมณคุปต์")
+    
+    st.markdown("**ผู้จัดทำ (กลุ่ม Python):**")
+    st.markdown("""
+    - นายจิรภัทร จำนงศิลป์ (Project Manager)
+    - นายวีรวิชญ์ วงค์ษาสิงห์ (Programmer)
+    - นายธนธร สืบกระแสร์ (Programmer)
+    - นายกนกพล เกตุจรุง (Graphic)
+    - นายธเนศ แต้โนนฝาว (Report/Slide)
+    """)
+
+# --- หน้าจอ UI หลัก ---
 st.title("🌱 ระบบแจ้งเตือนและรดน้ำอัตโนมัติ")
-st.markdown("ระบบติดตามค่าความชื้นในดินและควบคุมปั๊มน้ำ")
+st.markdown("ระบบติดตามค่าความชื้นในดินและควบคุมปั๊มน้ำ (Prototype สำหรับทดสอบซอฟต์แวร์)")
 st.divider()
 
 # FR-01: ส่วนแสดงค่าความชื้น
@@ -96,12 +120,12 @@ if not st.session_state.auto_mode:
     button_text = "ปิดปั๊มน้ำ" if st.session_state.pump_on else "เปิดปั๊มน้ำ"
     if st.button(f"💦 {button_text} (Manual)"):
         st.session_state.pump_on = not st.session_state.pump_on
-        st.rerun() # รีเฟรชหน้าจอเพื่ออัปเดตสถานะปุ่ม
+        st.rerun()
 else:
     st.info("โหมด Manual ถูกปิดการใช้งาน (ต้องปิด Auto Mode ก่อน)")
 
 st.markdown("---")
-# ปุ่มจำลองการทำงาน (เพื่อให้เห็นภาพการเปลี่ยนแปลง)
+# ปุ่มจำลองการทำงาน
 if st.button("⏳ จำลองเวลาผ่านไป (อัปเดตข้อมูล)"):
     simulate_sensor()
     st.rerun()
@@ -109,7 +133,8 @@ if st.button("⏳ จำลองเวลาผ่านไป (อัปเด
 # FR-05: ดูกราฟ
 st.header("📈 ประวัติความชื้นย้อนหลัง")
 conn = database.get_conn()
-df = pd.read_sql_query("SELECT timestamp, moisture_level FROM sensor_data ORDER BY id DESC LIMIT 20", conn)
+# ดึงข้อมูลมาแสดง 24 ค่าล่าสุด
+df = pd.read_sql_query("SELECT timestamp, moisture_level FROM sensor_data ORDER BY id DESC LIMIT 24", conn)
 conn.close()
 
 if not df.empty:
@@ -118,4 +143,4 @@ if not df.empty:
     df.set_index('timestamp', inplace=True)
     st.line_chart(df)
 else:
-    st.info("ยังไม่มีข้อมูลประวัติความชื้น (กด 'จำลองเวลาผ่านไป' เพื่อสร้างข้อมูล)")
+    st.info("ยังไม่มีข้อมูลประวัติความชื้น (กด 'จำลองเวลาผ่านไป' เพื่อสร้างประวัติ)")
