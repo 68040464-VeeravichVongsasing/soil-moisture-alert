@@ -31,8 +31,8 @@
 
 ```bash
 # 1. โคลนโปรเจกต์ลงเครื่อง
-git clone https://github.com/68040464-VeeravichVongsasing/-.git
-cd [ชื่อโฟลเดอร์โปรเจกต์]
+git clone https://github.com/68040464-VeeravichVongsasing/soil-moisture-alert.git
+cd [soil-moisture-alert]
 
 # 2. สร้างและเปิดใช้งาน Virtual Environment
 python -m venv .venv
