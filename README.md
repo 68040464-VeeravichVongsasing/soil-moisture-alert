@@ -6,13 +6,13 @@
 
 ## 👥 คณะผู้จัดทำ (กลุ่ม Python)
 
-| ชื่อ - นามสกุล | บทบาทหน้าที่ | 
-| ----- | ----- | 
-| นายกนกพล เกตุจรุง | Project Manager (PM) | 
-| นายวีรวิชญ์ วงค์ษาสิงห์ | Programmer | 
-| นายธนธร สืบกระแสร์ | Programmer | 
-| นายจิรภัทร จำนงศิลป์ | Graphic & UI | 
-| นายธเนศ แต้โนนฝาว | Report & Slide Presentation | 
+| ชื่อ - นามสกุล | บทบาทหน้าที่ |
+| ----- | ----- |
+| นายกนกพล เกตุจรุง | Project Manager (PM) |
+| นายวีรวิชญ์ วงค์ษาสิงห์ | Programmer |
+| นายธนธร สืบกระแสร์ | Programmer |
+| นายจิรภัทร จำนงศิลป์ | Graphic & UI |
+| นายธเนศ แต้โนนฝาว | Report & Slide Presentation |
 
 **อาจารย์ที่ปรึกษา:** ผศ.ดร.ธนัท สมณคุปต์
 
@@ -22,8 +22,40 @@
 2. **FR-02: Smart Alert System:** ระบบแจ้งเตือนอัตโนมัติ พร้อมเปลี่ยนสีกรอบแสดงสถานะ (เขียว/แดง) ทันทีเมื่อความชื้นต่ำกว่าเกณฑ์ที่กำหนด
 3. **FR-03: Real-time Auto Watering:** โหมดรดน้ำอัตโนมัติ (Auto Mode) ที่ตอบสนองทันทีเมื่อปรับเกณฑ์ มาพร้อม **แอนิเมชันจำลองการรดน้ำ** (ตัวเลขความชื้นและกราฟไต่ระดับขึ้นแบบเรียลไทม์) และตัดการทำงานเองเมื่อความชื้นถึง 90% เพื่อป้องกันน้ำท่วมขัง
 4. **FR-04: Manual Control & Emergency Stop:** โหมดควบคุมด้วยตนเอง (Manual Mode) และระบบปุ่ม "ปิดฉุกเฉิน" (Emergency Stop) ในระหว่างที่โหมด Auto กำลังทำงาน เพื่อความปลอดภัยสูงสุด
-5. **FR-05: Data History Chart:** กราฟแสดงประวัติความชื้นย้อนหลังดึงข้อมูลจากฐานข้อมูล SQLite โดยตรง แสดงการเปลี่ยนแปลงของความชื้นแบบละเอียด 
-6. **Code Quality:** ผ่านการทดสอบด้วย Unit Test (`pytest`) 100%
+5. **FR-05: Data History Chart:** กราฟแสดงประวัติความชื้นย้อนหลังดึงข้อมูลจากฐานข้อมูล SQLite โดยตรง แสดงการเปลี่ยนแปลงของความชื้นแบบละเอียด
+6. **หน้า Home และเมนูนำทาง (ปรับปรุงตามข้อเสนอแนะอาจารย์):** หน้าแรกแสดงไอคอนแอปและปุ่ม "เริ่มใช้งาน" ก่อนเข้า Dashboard มีเมนูด้านซ้าย 2 รายการ คือ "หน้าหลัก" และ "คณะผู้จัดทำโครงการ" โดยค่า Auto Mode และเกณฑ์ความชื้นไม่หายเมื่อสลับหน้า
+7. **Code Quality:** มี Unit Test (`pytest`) 6 กรณี ครอบคลุมฟังก์ชันตัดสินใจรดน้ำ `check_watering_condition` ทั้งกรณีปกติ กรณีขอบเขต และกรณีข้อมูลผิดปกติ
+
+> หมายเหตุ: ค่าความชื้นในแอปเป็นการ **จำลอง** (Simulation) ไม่ได้อ่านจากเซนเซอร์จริง ต้นแบบนี้ออกแบบเพื่อให้เชื่อมต่อกับฮาร์ดแวร์ IoT ได้ในอนาคต
+
+## 🗂️ โครงสร้างโปรเจกต์
+
+```
+soil-moisture-alert/
+├─ app.py                  # หน้า Home (หน้าแรก)
+├─ pages/
+│  ├─ 2_Dashboard.py       # หน้าหลัก (Dashboard)
+│  └─ 3_Team.py            # หน้าคณะผู้จัดทำโครงการ
+├─ ui_helpers.py           # ตัวช่วย UI ใช้ร่วมกัน (เมนูซ้าย, CSS, ไอคอน)
+├─ utils.py                # ฟังก์ชันตัดสินใจรดน้ำ
+├─ database.py             # เชื่อมต่อ/สร้างตาราง SQLite
+├─ assets/                 # ไอคอนแอป
+├─ .streamlit/config.toml  # ล็อกธีมสว่าง
+├─ tests/test_utils.py     # Unit Test
+├─ docs/                   # เอกสารและ diagram
+├─ pytest.ini
+└─ requirements.txt
+```
+
+## 🧭 แผนภาพระบบ
+
+| แผนภาพ | ไฟล์ |
+| --- | --- |
+| สถาปัตยกรรมระบบ | [docs/diagrams/architecture.png](docs/diagrams/architecture.png) |
+| ER Diagram (ฐานข้อมูล) | [docs/diagrams/er_diagram.png](docs/diagrams/er_diagram.png) |
+| Flowchart หน้า Dashboard | [docs/diagrams/flowchart_dashboard.png](docs/diagrams/flowchart_dashboard.png) |
+
+![สถาปัตยกรรมระบบ](docs/diagrams/architecture.png)
 
 ## ⚙️ วิธีติดตั้งและรันบนเครื่อง (Local Setup)
 
@@ -32,7 +64,7 @@
 ```bash
 # 1. โคลนโปรเจกต์ลงเครื่อง
 git clone https://github.com/68040464-VeeravichVongsasing/soil-moisture-alert.git
-cd [soil-moisture-alert]
+cd soil-moisture-alert
 
 # 2. สร้างและเปิดใช้งาน Virtual Environment
 python -m venv .venv
@@ -44,9 +76,18 @@ python -m venv .venv
 # 3. ติดตั้งแพ็กเกจที่จำเป็น
 pip install -r requirements.txt
 
-# 4. เปิดใช้งานแอปพลิเคชัน Streamlit
+# 4. เปิดใช้งานแอปพลิเคชัน Streamlit (เริ่มที่หน้า Home)
 streamlit run app.py
+
+# 5. (ทางเลือก) รัน Unit Test
+python -m pytest
 ```
+
+## ⚠️ ข้อจำกัดที่ทราบ
+
+* ค่าความชื้นเป็นข้อมูลจำลอง ยังไม่เชื่อมต่อเซนเซอร์/ปั๊มจริง
+* ฐานข้อมูลมีตาราง `notifications` เตรียมไว้สำหรับขยายระบบ แต่เวอร์ชันนี้ยังไม่บันทึกข้อมูลลงตารางนี้ (การแจ้งเตือนแสดงบนหน้าจอจากสถานะความชื้นโดยตรง)
+* ระหว่างรดน้ำ หากออกจากหน้า Dashboard การจำลองรดน้ำจะหยุดชั่วคราวจนกว่าจะกลับมาที่หน้านี้
 
 ## 📚 แหล่งข้อมูลและอ้างอิง
 
